@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pdftomarkdown"
+version = "0.1.0"
+description = "Math-aware PDF to Markdown converter with Marker, MinerU, and Gemini repair."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "google-genai>=1.30.0",
+  "PyMuPDF>=1.24.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=9.0.0",
+]
+
+[project.scripts]
+pdf2md = "pdftomarkdown.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
