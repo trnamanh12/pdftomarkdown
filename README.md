@@ -66,6 +66,8 @@ Notes:
 
 Kaggle notebooks conventionally read attached datasets from `/kaggle/input` and write generated files to `/kaggle/working`. `pdftomarkdown` now includes a small Kaggle helper and a `--kaggle` CLI mode for that layout.
 
+### 1) Install `pdftomarkdown` and the backends
+
 Install the project in the notebook, then install the backend CLIs you plan to use:
 
 ```bash
@@ -80,6 +82,27 @@ Notes:
 - Marker and MinerU are not available by default in Kaggle. Install both if you want full `--backend auto` behavior.
 - If you only install one backend, pin it explicitly with `--backend marker` or `--backend mineru`.
 - If a backend CLI is missing, `pdf2md` will raise a backend error rather than silently falling back to a non-installed tool.
+
+### 2) Set the Gemini API key and model
+
+Create Kaggle secrets named `GEMINI_API_KEY` and, optionally, `GEMINI_MODEL`. The project reads these from the environment when it builds the runtime config.
+
+```python
+import os
+from kaggle_secrets import UserSecretsClient
+
+os.environ["GEMINI_API_KEY"] = UserSecretsClient().get_secret("GEMINI_API_KEY")
+os.environ["GEMINI_MODEL"] = UserSecretsClient().get_secret("GEMINI_MODEL") or "gemini-flash-lite-latest"
+```
+
+Recommended model defaults:
+
+- `gemini-flash-lite-latest` for the cheapest fast repair pass
+- `gemini-flash-latest` or another model if you want to trade cost for quality
+
+If `GEMINI_API_KEY` is not set, Gemini repair stays disabled and the pipeline uses Marker/MinerU only.
+
+### 3) Run the converter
 
 CLI usage from a Kaggle notebook:
 
@@ -114,17 +137,7 @@ output_path = convert_pdf("my-dataset/paper.pdf", backend="marker", marker_gpus=
 print(output_path)
 ```
 
-Gemini in Kaggle:
-
-```python
-import os
-from kaggle_secrets import UserSecretsClient
-
-os.environ["GEMINI_API_KEY"] = UserSecretsClient().get_secret("GEMINI_API_KEY")
-os.environ["GEMINI_MODEL"] = "gemini-flash-lite-latest"  # optional
-```
-
-If `GEMINI_API_KEY` is not set, Gemini repair remains disabled and the pipeline uses Marker/MinerU only.
+Tip: you can also pass `gemini_model="gemini-flash-lite-latest"` directly to `convert_pdf(...)` or `--gemini-model` on the CLI, but the environment variable is the most convenient for Kaggle notebooks.
 
 ## Notes
 
