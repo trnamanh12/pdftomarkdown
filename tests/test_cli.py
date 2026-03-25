@@ -62,3 +62,25 @@ def test_cli_requires_out_outside_kaggle(monkeypatch, tmp_path: Path) -> None:
         cli.main([str(input_pdf)])
 
     assert exc_info.value.code == 2
+
+
+def test_cli_parses_marker_gpus(monkeypatch, tmp_path: Path) -> None:
+    input_pdf = tmp_path / "sample.pdf"
+    output_md = tmp_path / "sample.md"
+    input_pdf.write_bytes(b"%PDF-1.4")
+
+    captured: dict[str, object] = {}
+
+    class CapturingPipeline(FakePipeline):
+        def __init__(self, config) -> None:
+            captured["config"] = config
+            super().__init__(config)
+
+    monkeypatch.setattr(cli, "ConversionPipeline", CapturingPipeline)
+
+    exit_code = cli.main(
+        [str(input_pdf), "--out", str(output_md), "--marker-gpus", "0,1", "--disable-gemini-repair"]
+    )
+
+    assert exit_code == 0
+    assert captured["config"].marker_gpus == (0, 1)

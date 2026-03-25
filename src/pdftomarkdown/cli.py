@@ -4,7 +4,12 @@ import argparse
 from pathlib import Path
 
 from pdftomarkdown import kaggle
-from pdftomarkdown.config import AppConfig, get_default_gemini_model
+from pdftomarkdown.config import (
+    AppConfig,
+    get_default_gemini_model,
+    get_default_marker_gpus,
+    parse_marker_gpus,
+)
 from pdftomarkdown.pipeline import ConversionPipeline
 
 
@@ -49,6 +54,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Command or absolute path to the Marker CLI. Defaults to 'marker_single'.",
     )
     parser.add_argument(
+        "--marker-gpus",
+        type=parse_marker_gpus,
+        default=get_default_marker_gpus(),
+        help="Comma-separated CUDA device indices for Marker, for example '0,1'. Defaults to MARKER_GPUS.",
+    )
+    parser.add_argument(
         "--mineru-command",
         default="mineru",
         help="Command or absolute path to the MinerU CLI. Defaults to 'mineru'.",
@@ -71,6 +82,7 @@ def main(argv: list[str] | None = None) -> int:
             disable_gemini_repair=args.disable_gemini_repair,
             emit_debug_report=args.emit_debug_report,
             marker_command=args.marker_command,
+            marker_gpus=args.marker_gpus,
             mineru_command=args.mineru_command,
         )
     else:
@@ -86,6 +98,7 @@ def main(argv: list[str] | None = None) -> int:
             disable_gemini_repair=args.disable_gemini_repair,
             emit_debug_report=args.emit_debug_report,
             marker_command=args.marker_command,
+            marker_gpus=args.marker_gpus,
             mineru_command=args.mineru_command,
         )
     pipeline = ConversionPipeline(config)

@@ -34,6 +34,12 @@ def analyze_pdf(pdf_path: Path) -> list[PageStats]:
     return stats
 
 
+def get_page_count(pdf_path: Path) -> int:
+    fitz = _require_fitz()
+    with fitz.open(pdf_path) as doc:
+        return len(doc)
+
+
 def render_page_png(pdf_path: Path, page_number: int, dpi: int = 220) -> bytes:
     fitz = _require_fitz()
     with fitz.open(pdf_path) as doc:

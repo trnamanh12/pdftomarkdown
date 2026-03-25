@@ -42,13 +42,25 @@ export GEMINI_MODEL=gemini-flash-lite-latest
 
 Notebook runtimes often set secrets after Python has already started. `pdftomarkdown` reads `GEMINI_API_KEY` and `GEMINI_MODEL` when `AppConfig` is created, so setting them from a notebook cell works as expected.
 
+To shard Marker across multiple GPUs, set `MARKER_GPUS` or pass `--marker-gpus`:
+
+```bash
+export MARKER_GPUS=0,1
+```
+
 ## Usage
 
 ```bash
 pdf2md input.pdf --out output.md
 pdf2md input.pdf --out output.md --backend marker --disable-gemini-repair
 pdf2md input.pdf --out output.md --emit-debug-report
+pdf2md input.pdf --out output.md --backend marker --marker-gpus 0,1
 ```
+
+Notes:
+
+- `--marker-gpus 0,1` shards a single PDF into Marker page ranges and runs one `marker_single` process per GPU.
+- This is different from Marker's own `marker_chunk_convert`, which is designed for folders of input files.
 
 ## Kaggle Notebook
 
@@ -75,6 +87,7 @@ CLI usage from a Kaggle notebook:
 !pdf2md my-dataset/paper.pdf --kaggle --backend auto
 !pdf2md my-dataset/paper.pdf --kaggle --backend marker --out results/paper.md
 !pdf2md /kaggle/input/my-dataset/paper.pdf --kaggle --backend marker
+!pdf2md /kaggle/input/my-dataset/paper.pdf --kaggle --backend marker --marker-gpus 0,1 --out results/paper.md
 ```
 
 With `--kaggle`:
@@ -89,6 +102,15 @@ Notebook helper usage:
 from pdftomarkdown.kaggle import convert_pdf
 
 output_path = convert_pdf("my-dataset/paper.pdf", backend="marker")
+print(output_path)
+```
+
+If your Kaggle runtime exposes two T4s, you can also use both explicitly from Python:
+
+```python
+from pdftomarkdown.kaggle import convert_pdf
+
+output_path = convert_pdf("my-dataset/paper.pdf", backend="marker", marker_gpus=(0, 1))
 print(output_path)
 ```
 

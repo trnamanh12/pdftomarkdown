@@ -17,6 +17,35 @@ def get_default_gemini_api_key() -> str | None:
     return os.getenv("GEMINI_API_KEY")
 
 
+def parse_marker_gpus(value: str | list[int] | tuple[int, ...] | None) -> tuple[int, ...]:
+    if value is None:
+        return ()
+
+    if isinstance(value, (list, tuple)):
+        raw_items = list(value)
+    else:
+        stripped = value.strip()
+        if not stripped:
+            return ()
+        raw_items = [item.strip() for item in stripped.split(",")]
+
+    devices: list[int] = []
+    for item in raw_items:
+        try:
+            device = int(item)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"Invalid Marker GPU index: {item!r}") from exc
+        if device < 0:
+            raise ValueError(f"Marker GPU indices must be non-negative: {item!r}")
+        if device not in devices:
+            devices.append(device)
+    return tuple(devices)
+
+
+def get_default_marker_gpus() -> tuple[int, ...]:
+    return parse_marker_gpus(os.getenv("MARKER_GPUS"))
+
+
 @dataclass(slots=True)
 class Thresholds:
     fallback_score: float = 72.0
@@ -37,6 +66,7 @@ class AppConfig:
     disable_gemini_repair: bool = False
     emit_debug_report: bool = False
     marker_command: str = "marker_single"
+    marker_gpus: tuple[int, ...] = field(default_factory=get_default_marker_gpus)
     mineru_command: str = "mineru"
     thresholds: Thresholds = field(default_factory=Thresholds)
 

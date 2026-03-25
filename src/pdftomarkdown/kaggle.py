@@ -8,6 +8,8 @@ from pdftomarkdown.config import (
     DEFAULT_KAGGLE_WORKING_DIR,
     get_default_gemini_api_key,
     get_default_gemini_model,
+    get_default_marker_gpus,
+    parse_marker_gpus,
 )
 from pdftomarkdown.pipeline import ConversionPipeline
 
@@ -57,6 +59,7 @@ def build_kaggle_config(
     disable_gemini_repair: bool = False,
     emit_debug_report: bool = False,
     marker_command: str = "marker_single",
+    marker_gpus: tuple[int, ...] | list[int] | str | None = None,
     mineru_command: str = "mineru",
     input_root: Path | None = None,
     working_root: Path | None = None,
@@ -73,6 +76,7 @@ def build_kaggle_config(
         disable_gemini_repair=disable_gemini_repair,
         emit_debug_report=emit_debug_report,
         marker_command=marker_command,
+        marker_gpus=parse_marker_gpus(marker_gpus) if marker_gpus is not None else get_default_marker_gpus(),
         mineru_command=mineru_command,
     )
 
@@ -88,6 +92,7 @@ def convert_pdf(
     disable_gemini_repair: bool = False,
     emit_debug_report: bool = False,
     marker_command: str = "marker_single",
+    marker_gpus: tuple[int, ...] | list[int] | str | None = None,
     mineru_command: str = "mineru",
     input_root: Path | None = None,
     working_root: Path | None = None,
@@ -102,6 +107,7 @@ def convert_pdf(
         disable_gemini_repair=disable_gemini_repair,
         emit_debug_report=emit_debug_report,
         marker_command=marker_command,
+        marker_gpus=marker_gpus,
         mineru_command=mineru_command,
         input_root=input_root,
         working_root=working_root,

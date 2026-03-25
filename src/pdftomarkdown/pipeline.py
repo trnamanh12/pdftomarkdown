@@ -23,7 +23,10 @@ class ConversionPipeline:
     ) -> None:
         self.config = config
         self.runtime_notes: list[str] = []
-        self.marker_backend = marker_backend or MarkerBackend(command=config.marker_command)
+        self.marker_backend = marker_backend or MarkerBackend(
+            command=config.marker_command,
+            gpu_devices=config.marker_gpus,
+        )
         self.mineru_backend = mineru_backend or MinerUBackend(command=config.mineru_command)
         self.repair_client = repair_client or (
             GeminiRepairClient(api_key=config.gemini_api_key, model=config.gemini_model)
