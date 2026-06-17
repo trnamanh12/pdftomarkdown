@@ -6,6 +6,7 @@ from pathlib import Path
 from pdftomarkdown import kaggle
 from pdftomarkdown.config import (
     AppConfig,
+    get_default_gemini_api_key,
     get_default_gemini_model,
     get_default_marker_gpus,
     parse_marker_gpus,
@@ -36,6 +37,11 @@ def build_parser() -> argparse.ArgumentParser:
         "--gemini-model",
         default=get_default_gemini_model(),
         help="Gemini model name. Defaults to GEMINI_MODEL or gemini-flash-lite-latest.",
+    )
+    parser.add_argument(
+        "--gemini-api-key",
+        default=get_default_gemini_api_key(),
+        help="Gemini API key. Defaults to GEMINI_API_KEY environment variable.",
     )
     parser.add_argument("--max-workers", default=1, type=int, help="Max workers for page-scoped repair.")
     parser.add_argument(
@@ -78,6 +84,7 @@ def main(argv: list[str] | None = None) -> int:
             out=args.out,
             backend=args.backend,
             gemini_model=args.gemini_model,
+            gemini_api_key=args.gemini_api_key,
             max_workers=max(1, args.max_workers),
             disable_gemini_repair=args.disable_gemini_repair,
             emit_debug_report=args.emit_debug_report,
@@ -94,6 +101,7 @@ def main(argv: list[str] | None = None) -> int:
             output_path=args.out,
             backend=args.backend,
             gemini_model=args.gemini_model or get_default_gemini_model(),
+            gemini_api_key=args.gemini_api_key or get_default_gemini_api_key(),
             max_workers=max(1, args.max_workers),
             disable_gemini_repair=args.disable_gemini_repair,
             emit_debug_report=args.emit_debug_report,
