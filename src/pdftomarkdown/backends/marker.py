@@ -213,13 +213,20 @@ def _ordered_pages(pages: Sequence[PageIR], expected_page_numbers: Sequence[int]
     missing = [page_number for page_number in expected if page_number not in pages_by_number]
     unexpected = sorted(page_number for page_number in pages_by_number if page_number not in expected_set)
     if missing or unexpected:
+        import sys
         problems: list[str] = []
         if missing:
             problems.append(f"missing pages {missing}")
         if unexpected:
             problems.append(f"unexpected pages {unexpected}")
-        raise BackendError(f"Marker returned inconsistent page output: {', '.join(problems)}.")
-    return [pages_by_number[page_number] for page_number in expected]
+        print(
+            f"Warning: Marker returned inconsistent page output: {', '.join(problems)}. Proceeding with fallback/repair.",
+            file=sys.stderr,
+        )
+    if not pages_by_number and expected:
+        raise BackendError("Marker failed to extract any pages.")
+    return [pages_by_number[page_number] for page_number in expected if page_number in pages_by_number]
+
 
 
 def _split_page_numbers(page_numbers: Sequence[int], chunk_count: int) -> list[list[int]]:

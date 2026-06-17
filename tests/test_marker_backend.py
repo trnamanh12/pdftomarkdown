@@ -88,3 +88,54 @@ def _write_marker_output(output_dir: Path, pdf_path: Path, pages: dict[int, str]
         for page_number, markdown in sorted(pages.items())
     ]
     (rendered_dir / f"{pdf_path.stem}.md").write_text("".join(chunks), encoding="utf-8")
+
+
+def test_marker_backend_handles_missing_pages(monkeypatch, tmp_path: Path) -> None:
+    input_pdf = tmp_path / "paper.pdf"
+    input_pdf.write_bytes(b"%PDF-1.4")
+
+    backend = MarkerBackend(command="marker_single")
+    monkeypatch.setattr(backend, "_ensure_command", lambda: None)
+
+    def fake_run(cmd: list[str], *, env=None) -> None:
+        output_dir = Path(cmd[cmd.index("--output_dir") + 1])
+        # Only write page 1, leave page 2 missing
+        _write_marker_output(
+            output_dir,
+            input_pdf,
+            {
+                1: "# Page 1",
+            },
+        )
+
+    monkeypatch.setattr(backend, "_run", fake_run)
+
+    document = backend.extract(input_pdf, page_stats=_page_stats(1, 2))
+
+    assert [page.page_number for page in document.pages] == [1]
+    assert [page.markdown for page in document.pages] == ["# Page 1"]
+
+
+def test_marker_backend_raises_on_all_pages_missing(monkeypatch, tmp_path: Path) -> None:
+    import pytest
+    from pdftomarkdown.backends.base import BackendError
+
+    input_pdf = tmp_path / "paper.pdf"
+    input_pdf.write_bytes(b"%PDF-1.4")
+
+    backend = MarkerBackend(command="marker_single")
+    monkeypatch.setattr(backend, "_ensure_command", lambda: None)
+
+    def fake_run(cmd: list[str], *, env=None) -> None:
+        output_dir = Path(cmd[cmd.index("--output_dir") + 1])
+        # Do not write any pages (simulate complete failure of extraction output)
+        _write_marker_output(output_dir, input_pdf, {})
+
+    monkeypatch.setattr(backend, "_run", fake_run)
+
+    with pytest.raises(BackendError) as exc_info:
+        backend.extract(input_pdf, page_stats=_page_stats(1, 2))
+
+    assert "Marker failed to extract any pages" in str(exc_info.value)
+
+
